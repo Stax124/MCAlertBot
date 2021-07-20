@@ -16,7 +16,7 @@ class Alerts(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @tasks.loop(seconds=60)
+    @tasks.loop(seconds=120)
     async def check_for_code(self, ctx: Context, message_id: int):
         message = await ctx.fetch_message(message_id)
 
@@ -25,7 +25,8 @@ class Alerts(commands.Cog):
         server = MinecraftServer(
             self.bot.configs[ctx.guild.id]["minecraft_server"])
         query = await server.async_query()
-        
+        status = await server.async_status()
+
         color = discord.Color.from_rgb(255, 0, 0) if (len(moderators) > 0 or self.bot.configs[ctx.guild.id]["raid_ongoing"]) else (discord.Color.from_rgb(
             255, 255, 0) if len(threats) > 0 else discord.Color.from_rgb(0, 255, 0))
 
@@ -46,8 +47,10 @@ class Alerts(commands.Cog):
         embed.add_field(name="Host", value=query.software.brand)
         embed.add_field(
             name="IP", value=self.bot.configs[ctx.guild.id]["minecraft_server"])
+        embed.add_field(
+            name="Ping", value=status.latency)
         embed.set_footer(text="Last update: " +
-                         datetime.now().strftime(r"%H:%M:%S") + " UTC+2")
+                         datetime.now().strftime(r"%H:%M:%S"))
         await message.edit(message=None, embed=embed)
 
     @commands.command(name="alert-setup")
